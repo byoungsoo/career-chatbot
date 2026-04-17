@@ -59,6 +59,7 @@ class Me:
         return prompt
 
     def chat(self, message, history):
+        logger.info(f"Chat request: message='{message[:100]}', history_len={len(history)}")
         model = BedrockModel(
             model_id=self.model_id,
             region_name=self.region,
@@ -78,8 +79,15 @@ class Me:
                 "content": [{"text": str(content)}],
             })
 
-        response = agent(message)
-        return str(response)
+        logger.info(f"Calling Bedrock model: {self.model_id}")
+        try:
+            response = agent(message)
+            result = str(response)
+            logger.info(f"Response: '{result[:100]}'")
+            return result
+        except Exception as e:
+            logger.error(f"Chat error: {e}", exc_info=True)
+            raise
 
 
 if __name__ == "__main__":

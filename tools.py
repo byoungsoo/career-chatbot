@@ -1,14 +1,18 @@
+import logging
 import os
 import requests
 from strands import tool
+
+logger = logging.getLogger(__name__)
 
 MAILGUN_DOMAIN = "bys.digital"
 EMAIL_TO = "skwltg90@naver.com"
 
 
 def _send_email(subject: str, body: str):
+    logger.info(f"Sending email: subject='{subject}'")
     api_key = os.getenv("MAILGUN_API_KEY")
-    requests.post(
+    response = requests.post(
         f"https://api.mailgun.net/v3/{MAILGUN_DOMAIN}/messages",
         auth=("api", api_key),
         data={
@@ -19,6 +23,7 @@ def _send_email(subject: str, body: str):
         },
         timeout=10,
     )
+    logger.info(f"Email sent: status={response.status_code}")
 
 
 @tool
@@ -31,6 +36,7 @@ def record_user_details(email: str, name: str = "Name not provided", notes: str 
         name: The user's name, if they provided it
         notes: Any additional information about the conversation
     """
+    logger.info(f"Tool called: record_user_details name='{name}', email='{email}'")
     _send_email(
         subject=f"[Career Chatbot] New contact: {name}",
         body=f"Name: {name}\nEmail: {email}\nNotes: {notes}",
@@ -46,6 +52,7 @@ def record_unknown_question(question: str) -> dict:
     Args:
         question: The question that couldn't be answered
     """
+    logger.info(f"Tool called: record_unknown_question question='{question[:100]}'")
     _send_email(
         subject="[Career Chatbot] Unknown question",
         body=f"Question: {question}",
