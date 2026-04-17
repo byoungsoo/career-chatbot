@@ -1,0 +1,55 @@
+replicaCount: 1
+
+image:
+  repository: "558846430793.dkr.ecr.ap-northeast-2.amazonaws.com/career-chatbot"
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: ""  # IAM Role ARN for Bedrock access
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 7860
+
+ingress:
+  ingressClassName: alb
+  host: "career-chatbot.bys.digital"
+  annotations:
+    alb.ingress.kubernetes.io/group.name: eks-main-etc
+    alb.ingress.kubernetes.io/subnets: bys-dev-sbn-az1-extelb,bys-dev-sbn-az2-extelb,bys-dev-sbn-az3-extelb,bys-dev-sbn-az4-extelb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/security-groups: bys-dev-sg-alb-eks-main-etc
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS13-1-2-2021-06
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:558846430793:certificate/c09f4f31-89da-4ca3-b072-a0fedddf5f7f
+    alb.ingress.kubernetes.io/healthcheck-path: /
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "10"
+    alb.ingress.kubernetes.io/healthy-threshold-count: "2"
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: "4"
+    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/success-codes: 200,301,302
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/tags: auto-delete=no
+
+config:
+  awsRegion: "ap-northeast-2"
+  modelId: "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+  assistantName: "Byoungsoo Ko"
+  meDir: "me"
+
+externalSecret:
+  secretStoreName: "aws-secrets-manager"  # ClusterSecretStore 이름
+  secretPath: "career-chatbot"            # AWS Secrets Manager secret 이름
+

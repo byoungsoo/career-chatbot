@@ -1,0 +1,22 @@
+# Environment
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# uv
+.venv/
+.python-version
+
+# Build
+dist/
+build/
+
+# OS
+.DS_Store
+
+# Personal data (PDFs, txt loaded at runtime)
+me/
