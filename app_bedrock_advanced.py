@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+import logging
 import os
 from pypdf import PdfReader
 import gradio as gr
@@ -6,6 +7,9 @@ from strands import Agent
 from strands.models import BedrockModel
 
 from tools import record_user_details, record_unknown_question
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logger = logging.getLogger(__name__)
 
 load_dotenv(override=True)
 
@@ -16,6 +20,7 @@ class Me:
         self.name = os.getenv('ASSISTANT_NAME', 'Byoungsoo Ko')
         self.model_id = os.getenv('MODEL_ID', 'us.anthropic.claude-haiku-4-5-20251001-v1:0')
         self.region = os.getenv('AWS_REGION', 'us-east-1')
+        logger.info(f"Initializing Me: name={self.name}, model={self.model_id}, region={self.region}")
 
         self.documents = {}
         me_dir = os.getenv('ME_DIR', 'me')
@@ -30,9 +35,12 @@ class Me:
                     if page_text:
                         text += page_text
                 self.documents[doc_name] = text
+                logger.info(f"Loaded PDF: {filename} ({len(text)} chars)")
             elif filename.endswith('.txt'):
                 with open(filepath, 'r', encoding='utf-8') as f:
                     self.documents[doc_name] = f.read()
+                logger.info(f"Loaded TXT: {filename}")
+        logger.info(f"Documents loaded: {list(self.documents.keys())}")
 
     def system_prompt(self):
         prompt = (
@@ -75,7 +83,9 @@ class Me:
 
 
 if __name__ == "__main__":
+    logger.info("Starting career-chatbot...")
     me = Me()
+    logger.info("Me initialized, building Gradio UI...")
 
     custom_css = """
     .gradio-container {
@@ -219,4 +229,5 @@ if __name__ == "__main__":
         </div>
         """)
 
+    logger.info("Launching Gradio on 0.0.0.0:7860...")
     demo.launch(theme=theme, css=custom_css, server_name="0.0.0.0", server_port=7860)
