@@ -12,4 +12,4 @@ COPY me/ ./me/
 
 EXPOSE 7860
 
-CMD ["uv", "run", "python", "app_bedrock_advanced.py"]
+CMD ["/app/.venv/bin/python", "app_bedrock_advanced.py"]
