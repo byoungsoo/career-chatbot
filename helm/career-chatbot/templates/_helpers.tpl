@@ -1,5 +1,5 @@
 {{- define "career-chatbot.fullname" -}}
-{{ .Release.Name }}-{{ .Chart.Name }}
+{{ .Release.Name }}
 {{- end }}
 
 {{- define "career-chatbot.selectorLabels" -}}
