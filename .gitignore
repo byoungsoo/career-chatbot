@@ -18,5 +18,5 @@ build/
 # OS
 .DS_Store
 
-# Personal data (PDFs, txt loaded at runtime)
-me/
+# Personal data - intentionally tracked
+# me/
