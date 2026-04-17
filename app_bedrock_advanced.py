@@ -219,4 +219,4 @@ if __name__ == "__main__":
         </div>
         """)
 
-    demo.launch(theme=theme, css=custom_css)
+    demo.launch(theme=theme, css=custom_css, server_name="0.0.0.0", server_port=7860)
