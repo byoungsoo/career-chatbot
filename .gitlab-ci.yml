@@ -1,0 +1,52 @@
+stages:
+  - auth
+  - build
+
+variables:
+  AWS_REGION: ap-northeast-2
+  AWS_ACCOUNT_ID: "558846430793"
+  ECR_REPO: career-chatbot
+  IMAGE_TAG: ${CI_COMMIT_SHORT_SHA}
+  DEPLOY_ROLE: "arn:aws:iam::558846430793:role/bys-dev-iam-deploy-role"
+
+ecr-auth:
+  stage: auth
+  image: amazon/aws-cli:latest
+  before_script:
+    - >-
+      CREDS=$(aws sts assume-role
+      --role-arn ${DEPLOY_ROLE}
+      --role-session-name gitlab-build
+      --query 'Credentials'
+      --output json)
+    - yum install -y jq > /dev/null 2>&1
+    - export AWS_ACCESS_KEY_ID=$(echo $CREDS | jq -r .AccessKeyId)
+    - export AWS_SECRET_ACCESS_KEY=$(echo $CREDS | jq -r .SecretAccessKey)
+    - export AWS_SESSION_TOKEN=$(echo $CREDS | jq -r .SessionToken)
+  script:
+    - mkdir -p docker-config
+    - >-
+      echo "{\"auths\":{\"${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com\":{\"auth\":\"$(printf 'AWS:%s' $(aws ecr get-login-password --region ${AWS_REGION}) | base64 | tr -d '\n')\"}}}"
+      > docker-config/config.json
+  artifacts:
+    paths:
+      - docker-config/
+    expire_in: 10 minutes
+
+build:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  before_script:
+    - mkdir -p /kaniko/.docker
+    - cp docker-config/config.json /kaniko/.docker/config.json
+  script:
+    - >-
+      /kaniko/executor
+      --context ${CI_PROJECT_DIR}
+      --dockerfile ${CI_PROJECT_DIR}/Dockerfile
+      --destination ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG}
+      --destination ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:latest
+  needs:
+    - ecr-auth
