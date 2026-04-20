@@ -5,6 +5,7 @@ from pypdf import PdfReader
 import gradio as gr
 from strands import Agent
 from strands.models import BedrockModel
+from strands.hooks import BeforeModelCallEvent, AfterModelCallEvent, BeforeToolCallEvent, AfterToolCallEvent
 
 from tools import record_user_details, record_unknown_question
 
@@ -49,7 +50,9 @@ class Me:
             f"Your responsibility is to represent {self.name} for interactions on the website as faithfully as possible. "
             f"You are given a summary of {self.name}'s background and LinkedIn profile which you can use to answer questions. "
             f"Be professional and engaging, as if talking to a potential client or future employer who came across the website. "
-            f"If you don't know the answer to any question, use your record_unknown_question tool to record the question. "
+            f"IMPORTANT: You MUST call the record_unknown_question tool whenever a user asks something you cannot find "
+            f"in the provided documents or that falls outside {self.name}'s known career and experience. "
+            f"Do not guess or make up information — call the tool instead and let the user know the question has been recorded. "
             f"If the user is engaging in discussion, try to steer them towards getting in touch via email; "
             f"ask for their email and record it using your record_user_details tool."
         )
@@ -69,6 +72,29 @@ class Me:
             system_prompt=self.system_prompt(),
             tools=[record_user_details, record_unknown_question],
         )
+
+        def on_before_model(event: BeforeModelCallEvent):
+            logger.info(f"[Strands] Model call started")
+
+        def on_after_model(event: AfterModelCallEvent):
+            if event.exception:
+                logger.error(f"[Strands] Model call failed: {event.exception}")
+            elif event.stop_response:
+                logger.info(f"[Strands] Model call done: stop_reason={event.stop_response.stop_reason}")
+
+        def on_before_tool(event: BeforeToolCallEvent):
+            logger.info(f"[Strands] Tool call: name={event.tool_use['name']}, input={event.tool_use['input']}")
+
+        def on_after_tool(event: AfterToolCallEvent):
+            if event.exception:
+                logger.error(f"[Strands] Tool failed: {event.exception}")
+            else:
+                logger.info(f"[Strands] Tool done: result={event.result}")
+
+        agent.add_hook(on_before_model)
+        agent.add_hook(on_after_model)
+        agent.add_hook(on_before_tool)
+        agent.add_hook(on_after_tool)
 
         for msg in history:
             content = msg.get("content") or ""

@@ -47,7 +47,9 @@ def record_user_details(email: str, name: str = "Name not provided", notes: str 
 @tool
 def record_unknown_question(question: str) -> dict:
     """
-    Always use this tool to record any question that couldn't be answered.
+    MUST be called whenever a question cannot be answered from the provided context.
+    Use this tool instead of guessing or making up information.
+    After calling this tool, inform the user that the question has been recorded and will be followed up.
 
     Args:
         question: The question that couldn't be answered
