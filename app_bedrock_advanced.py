@@ -66,9 +66,12 @@ class Me:
 
     def chat(self, message, history):
         logger.info(f"Chat request: message='{message[:100]}', history_len={len(history)}")
+        guardrail_id = os.getenv('BEDROCK_GUARDRAIL_ID')
+        guardrail_version = os.getenv('BEDROCK_GUARDRAIL_VERSION', '1')
         model = BedrockModel(
             model_id=self.model_id,
             region_name=self.region,
+            **({"guardrail_id": guardrail_id, "guardrail_version": guardrail_version, "guardrail_trace": "enabled"} if guardrail_id else {}),
         )
         agent = Agent(
             model=model,
