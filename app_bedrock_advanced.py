@@ -71,7 +71,7 @@ class Me:
         model = BedrockModel(
             model_id=self.model_id,
             region_name=self.region,
-            **({"guardrail_id": guardrail_id, "guardrail_version": guardrail_version, "guardrail_trace": "enabled"} if guardrail_id else {}),
+            **({"guardrail_id": guardrail_id, "guardrail_version": guardrail_version, "guardrail_trace": "enabled", "guardrail_latest_message": True} if guardrail_id else {}),
         )
         agent = Agent(
             model=model,
