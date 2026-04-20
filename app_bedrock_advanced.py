@@ -114,6 +114,9 @@ class Me:
         logger.info(f"Calling Bedrock model: {self.model_id}")
         try:
             response = agent(message)
+            if str(response.stop_reason) == "guardrail_intervened":
+                logger.warning("[Guardrail] Response blocked by guardrail")
+                return "죄송합니다. 해당 질문에는 답변드리기 어렵습니다."
             result = str(response)
             logger.info(f"Response: '{result[:100]}'")
             return result
