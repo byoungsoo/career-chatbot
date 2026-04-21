@@ -131,6 +131,12 @@ if __name__ == "__main__":
     logger.info("Me initialized, building Gradio UI...")
 
     custom_css = """
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+    * {
+        font-family: 'Noto Sans KR', sans-serif !important;
+    }
+
     .gradio-container {
         max-width: 1200px !important;
     }
